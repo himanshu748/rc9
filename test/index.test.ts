@@ -1,6 +1,7 @@
 import { chmodSync, existsSync, rmSync, statSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, test, expect, afterAll } from "vitest";
+import { homedir } from "node:os";
+import { describe, test, expect, afterAll, vi } from "vitest";
 import {
   write,
   read,
@@ -29,6 +30,28 @@ const config = {
 };
 
 describe("rc", () => {
+  test.each([undefined, "", "relative-config"])(
+    "User config directory falls back for %j",
+    (configHome) => {
+      vi.stubEnv("XDG_CONFIG_HOME", configHome);
+      try {
+        expect(userConfigDir()).toBe(resolve(homedir(), ".config"));
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    },
+  );
+
+  test("User config directory respects an absolute XDG_CONFIG_HOME", () => {
+    const configHome = resolve(__dirname, ".tmp/custom-config");
+    vi.stubEnv("XDG_CONFIG_HOME", configHome);
+    try {
+      expect(userConfigDir()).toBe(configHome);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   test("Write config", () => {
     write(config);
     expect(read()).toMatchObject(config);

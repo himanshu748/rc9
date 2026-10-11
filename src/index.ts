@@ -1,5 +1,5 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { homedir } from "node:os";
 import destr from "destr";
 import { flatten, unflatten } from "flat";
@@ -168,7 +168,8 @@ export function writeUser<T extends RC = RC>(config: T, options?: RCOptions | st
  * @returns {string} - The absolute path to the user configuration directory.
  */
 export function userConfigDir(): string {
-  return process.env.XDG_CONFIG_HOME || resolve(homedir(), ".config");
+  const configHome = process.env.XDG_CONFIG_HOME;
+  return configHome && isAbsolute(configHome) ? configHome : resolve(homedir(), ".config");
 }
 
 /**
